@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+sem_t f;   // Semaphore for full slots in the buffer
+sem_t e;   // Semaphore for empty slots in the buffer
+sem_t s;   // Semaphore for accessing the buffer
+
+int buffer[5];
+int in = 0;
+int out = 0;
+
+void *producer(void *arr) {
+    int data = *(int *)arr;
+    sem_wait(&e);
+    sem_wait(&s);
+
+    printf("Producer and data: %d\n", data);
+    buffer[in] = data;
+    in = (in + 1) % 5;
+
+    sem_post(&s);
+    sem_post(&f);
+}
+
+void *consumer(void *arr) {
+    int val;
+    do {
+        int data;
+        sem_wait(&f);
+        sem_wait(&s);
+
+        data = buffer[out];
+        out = (out + 1) % 5;
+
+        sem_post(&s);
+        sem_post(&e);
+        sem_getvalue(&e, &val);
+
+        printf("Data consumed: %d\n", data);
+    } while (1);
+}
+
+int main() {
+    pthread_t pt[10], ct;
+
+    sem_init(&e, 0, 5);  // Initialize for empty slots
+    sem_init(&f, 0, 0);  // Initialize for full slots
+    sem_init(&s, 0, 1);  // Initialize semaphore
+
+    int arr[10] = {6, 2, 5, 7, 63, 68, 61, 11, 60, 43};
+
+    int i;
+    pthread_create(&ct, NULL, consumer, NULL);
+    for (i = 0; i < 10; i++) {
+        pthread_create(&pt[i], NULL, producer, (void *)&arr[i]);
+    }
+
+    // Join producer threads
+    for (i = 0; i < 10; i++) {
+        pthread_join(pt[i], NULL);
+    }
+
+    // The consumer thread runs indefinitely, so you may need to manually terminate the program.
+
+    return 0;
+}
+//*********************************************OUTPUT**************************************************
+chinmay@chinmay-VirtualBox:~$ gcc prodcon.c
+chinmay@chinmay-VirtualBox:~$ ./a.out
+
+Producer and data: 43
+Producer and data: 60
+Producer and data: 11
+Producer and data: 61
+Data consumed: 43
+Data consumed: 60
+Data consumed: 11
+Data consumed: 61
+Producer and data: 68
+Producer and data: 2
+Producer and data: 6
+Data consumed: 68
+Data consumed: 2
+Data consumed: 6
+Producer and data: 63
+Data consumed: 63
+Producer and data: 5
+Data consumed: 5
+Producer and data: 7
+Data consumed: 7
+

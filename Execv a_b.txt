@@ -1,0 +1,140 @@
+
+// 1st: sorting (a.c)
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+
+void main(int argc, char* argv[])
+{
+	//const char* arr[] =  {"./b.out", "1", "2", "3", "4", "5", NULL};
+	pid_t pid;
+	
+	pid = fork();
+	
+	if(pid == 0) //child process
+	{
+		printf("I am old child process, process ID = %d\n", getpid());
+		//execl(arr[0], arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], NULL);//1st arg for path and after 2nd arg onwards it is for array execution
+		int i;
+		char *arr[argc];
+		for(i = 1; i < argc; i++)
+		{
+			arr[i - 1] = argv[i];
+		}
+		arr[argc - 1] = NULL;
+		
+		//sorting in accending order
+		
+		printf("\nSorting of given array in ascending order: ");
+		int flag=0;
+		for(int i = 0; i < argc - 2; i++)  //excluded last element(NULL) that's why upto argc - 2
+		{
+			for(int j = 0; j < argc - i - 2; j++)
+			{
+				if(atoi(arr[j]) > atoi(arr[j + 1]))  //atoi() : array to integer
+				{
+					char* temp;
+	   				temp = arr[j];
+					arr[j] = arr[j + 1];
+					arr[j + 1]=temp;
+					flag = 1;
+				}
+			}
+			if (flag == 0)
+	       		    break;
+		}
+		
+	        printf("\nAscending order :");
+	   	for(int i = 1; i < argc - 1; i++)
+		{
+	   		printf(" %s\t", arr[i]);
+		}
+		printf("\n");
+		
+		execv(arr[0], arr);   //executing file exec_b.c
+	}
+	else
+	{
+		wait();
+		printf("\nI am parent process, process ID = %d\n", getpid());
+	}
+}
+
+//**************************************************************************************************
+
+//2nd: binsearch (b.c)
+
+
+#include<stdio.h>
+#include<stdlib.h>
+
+void binary_search(int arr[], int min, int max)
+{
+	int i, mid;
+	
+	mid = (min + max)/2;
+	
+	int val;
+	printf("\nEnter the value to search :");
+	scanf("%d", &val);
+	
+	//printf("%d %d", min, max);
+	while(min <= max)
+	{
+		mid = (min + max)/2;
+		
+		if(arr[mid] == val)
+		{
+			printf("Location :%d", mid);
+			break;
+		}
+		else if(val < arr[mid])
+		{
+			max = mid - 1;
+		}
+		else
+		{
+			min = mid + 1;
+		}
+	}
+}
+void main(int argc, char *argv[])
+{
+	//int sum = 0;
+	
+	int arr[argc - 1];
+	
+	printf("\nI am new child process, process ID = %d", getpid());
+	printf("\nI am new child process, parent process ID = %d", getppid());
+	
+	for(int i = 1; i < argc; i++)  
+	{
+			//sum = sum + atoi(argv[i]);
+	   arr[i - 1] = atoi(argv[i]);   
+	   
+	}
+		//printf("\nAddition :%d",sum);
+	binary_search(arr, 0, argc - 2); //searching all array which excluded the NULL at the end of argc
+}
+
+
+//**********************************************************************************************
+/*OUTPUT:-
+
+ubuntu@omkar:~$ gcc b.c -o b.out
+ubuntu@omkar:~$ gcc a.c
+ubuntu@omkar:~$ ./a.out ./b.out 2 3 1 6 4 5
+I am old child process, process ID = 6251
+
+Sorting of given array in ascending order: 
+Ascending order : 1	 2	 3	 4	 5	 6	
+
+I am new child process, process ID = 6251
+I am new child process, parent process ID = 6250
+Enter the value to search :3
+Location :2
+I am parent process, process ID = 6250
+ubuntu@omkar:~$ 
+
+*/

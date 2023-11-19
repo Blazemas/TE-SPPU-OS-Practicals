@@ -1,0 +1,70 @@
+//file Extension should be .sh ex: addressbook.sh
+//to run : bash addressbook.sh
+
+option=0
+
+while [ $option -ne 6 ]
+do
+	echo -e "\nEnter which operation do you want to perform :- \n1. Create address book \n2. View address book \n3. Insert a record \n4. Modify a record \n5. Delete a record \n6. Exit \n"
+	read option
+	case $option in
+	1) echo -e "\nEnter file name :"
+	   read fname
+	   touch $fname
+	   echo "File created Successfully"
+	   ;;
+	 2)echo -e "\nID\tNAME\tMOBILE_NO.\tCITY"
+	   cat $fname
+	 ;;
+	 3) choice=1
+	    while [ $choice -ne 2 ]
+	    do	
+		echo -e "\nEnter employee id :-"
+		read empid
+		echo -e "\nEnter employee name :-"
+		read empname
+		echo -e "\nEnter employee mobile number :-"
+		read empmob 
+			
+		echo -e "\nEnter employee city"
+		read city
+		echo -e "\n$empid\t$empname\t$empmob\t$city">>$fname
+
+		echo -e "\nDo you want to continue 1. Yes 2. No"
+		read choice
+	   done	
+		;;
+	   4) echo "Enter employee id to modify its details :"
+	   read id
+	   grep $id $fname > temp.txt
+
+	   if [ -s temp.txt ]; then
+	       idval=$(grep -n "$id" $fname | cut -d ':' -f 1)
+	       echo "Enter which value to replace:"
+	       read change
+	       echo "Enter with which value to replace:"
+	       read replace
+	       sed -i "${idval}s/$change/$replace/" $fname
+	       echo "Record changed"
+	   else
+	       echo "Record not found"
+	   fi
+	   rm -f temp.txt
+	   ;;
+	   
+	   5) echo "Enter the employee id to delete :"
+	   read did
+	   grep $did $fname > temp.txt
+
+	   if [ -s temp.txt ]; then
+	       idval=$(grep -n "$did" $fname | cut -d ':' -f 1)
+	       sed -i "${idval}d" $fname
+	       echo "Record Deleted"
+	   else
+	       echo "Record not found"
+	   fi
+	   rm -f temp.txt
+	   ;;
+
+	 *)esac
+done
